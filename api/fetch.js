@@ -15,4 +15,10 @@ async function fetch(url) {
   return res.data;
 }
 
-module.exports = fetch;
+const dateApi = date => `/1.2/user/-/sleep/date/${date}.json`;
+const listApi = params =>
+  `/1.2/user/-/sleep/list.json?${Object.entries(params)
+    .map(([key, val]) => key + "=" + val)
+    .reduce((acc, p) => acc + "&" + p)}`;
+
+module.exports = { fetch, dateApi, listApi };
