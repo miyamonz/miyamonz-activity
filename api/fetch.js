@@ -15,5 +15,5 @@ async function fetch(date) {
   return res.data;
 }
 
-const data = fetch("2018-12-20");
-data.then(console.log);
+// const data = fetch("2018-12-20");
+module.exports = fetch;

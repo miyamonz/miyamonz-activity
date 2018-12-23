@@ -15,12 +15,13 @@ services:
     #     tty: true
     api:
         build: 
-            context: .
-            dockerfile: docker/api/Dockerfile
+            context: ./api
+        ports:
+            - "3000:3000"
         volumes:
             - ./api:/code
             - node_modules:/code/node_modules
-        command: npm run start:dev
+        command: npm start
         # depends_on:
         #     - db
         tty: true

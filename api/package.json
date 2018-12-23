@@ -1,9 +1,11 @@
 {
   "name": "miyamonz-activity",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "miyamonz-activity api. proxy fitbit",
   "scripts": {
+    "start": "if-env NODE_ENV=production && npm run start:prod || npm run start:dev",
+    "start:dev": "node index.js",
+    "start:pord": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",
-    "env-cmd": "^8.0.2",
+    "if-env": "^1.0.4",
     "koa": "^2.6.2"
   }
 }

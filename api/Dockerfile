@@ -4,5 +4,3 @@ ADD . /${folder}
 WORKDIR /${folder}
 RUN npm install
 CMD ["npm", "run", "start"]
-
-
