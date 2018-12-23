@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@koa/cors": "^2.2.3",
     "axios": "^0.18.0",
     "if-env": "^1.0.4",
     "koa": "^2.6.2"
