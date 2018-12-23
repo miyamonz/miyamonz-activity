@@ -6,8 +6,8 @@ services:
         ports:
             - "8080:8080"
         volumes:
-            - ./client:/code
-            - client_node_modules:/code/node_modules
+            - ./client:/home
+            - client_node_modules:/home/node_modules
         command: npm start
         depends_on:
             - api
@@ -18,8 +18,8 @@ services:
         ports:
             - $PORT:$PORT
         volumes:
-            - ./api:/code
-            - api_node_modules:/code/node_modules
+            - ./api:/home
+            - api_node_modules:/home/node_modules
         command: npm start
         # env_file: ./api/.env
         # depends_on:

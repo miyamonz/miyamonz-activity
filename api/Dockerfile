@@ -1,6 +1,5 @@
 FROM node:10.13.0-alpine
-ARG folder="code"
-ADD . /${folder}
-WORKDIR /${folder}
+ADD . /home
+WORKDIR /home
 RUN npm install
 CMD ["npm", "run", "start"]
