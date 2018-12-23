@@ -11,9 +11,9 @@ new Vue({
 class Store {
   constructor() {}
   async fetch() {
-    const json = await fetch("http://localhost:3000", { mode: "cors" }).then(
-      res => res.json()
-    );
+    const url = process.env.VUE_APP_API_ENDPOINT;
+    console.log(url);
+    const json = await fetch(url, { mode: "cors" }).then(res => res.json());
     console.log(json);
     this.sleep = json.sleep;
     return this.sleep;
