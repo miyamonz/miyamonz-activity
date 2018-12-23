@@ -4,7 +4,7 @@ services:
         build: 
             context: ./client
         ports:
-            - "8000:8000"
+            - "8080:8080"
         volumes:
             - ./client:/code
             - client_node_modules:/code/node_modules
