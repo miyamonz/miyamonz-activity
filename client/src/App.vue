@@ -1,19 +1,33 @@
 <template>
-  <div id="app"><img alt="Vue logo" src="./assets/logo.png" /> {{ json }}</div>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png" />
+    <div>
+      <table>
+        <tr>
+          <td>date</td>
+          <td>時間</td>
+          <td>start</td>
+          <td>end</td>
+        </tr>
+        <SleepTableRow v-for="s in sleep" :key="s.dateOfSleep" :json="s" />
+      </table>
+    </div>
+  </div>
 </template>
 <script>
+import SleepTableRow from "./components/SleepTableRow.vue";
+import fitbit from "./store.js";
+import { sleepMap } from "./util.js";
 export default {
   name: "app",
-  components: {},
-  mounted() {
-    fetch("http://localhost:3000", { mode: "cors" })
-      .then(res => res.json())
-      .then(json => (this.json = json));
+  components: { SleepTableRow },
+  async mounted() {
+    const sleep = await fitbit.fetch();
+    console.log(sleep[0]);
+    this.$set(this, "sleep", sleep.map(sleepMap));
   },
   data() {
-    return {
-      json: null
-    };
+    return { sleep: [] };
   }
 };
 </script>
