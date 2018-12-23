@@ -9,5 +9,5 @@ module.exports = (req, res) => {
 
   const url = listApi({ afterDate: date, offset: 0, limit: 10, sort: "desc" });
   console.log({ url });
-  fetch(url).then(res.end);
+  fetch(url).then(json => res.end(JSON.stringify(json)));
 };

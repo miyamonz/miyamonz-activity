@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "env": {
+    "VUE_APP_API_ENDPOINT": "https://miyamonz-activity-api.now.sh/"
+  },
+  "builds": [
+    {"src": "./package.json", "use": "@now/static-build"}
+  ]
+}

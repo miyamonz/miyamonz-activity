@@ -1,0 +1,13 @@
+{
+  "name": "miyamonz-activity-api",
+  "version": 2,
+  "env": {
+    "FITBIT_ACCESS_TOKEN": "@fitbit-access-token"
+  },
+  "builds": [
+    {"src": "./rambda.js", "use": "@now/node"}
+  ],
+  "routes": [
+    {"src": "/", "dest": "/rambda.js"}
+  ]
+}
