@@ -9,6 +9,7 @@ services:
             - ./client:/home
             - client_node_modules:/home/node_modules
         command: npm start
+        env_file: ./client/.env
         depends_on:
             - api
         tty: true
@@ -21,7 +22,7 @@ services:
             - ./api:/home
             - api_node_modules:/home/node_modules
         command: npm start
-        # env_file: ./api/.env
+        env_file: ./api/.env
         # depends_on:
         #     - db
         tty: true
