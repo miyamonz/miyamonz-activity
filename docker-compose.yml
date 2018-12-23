@@ -17,11 +17,12 @@ services:
         build: 
             context: ./api
         ports:
-            - "3000:3000"
+            - $PORT:$PORT
         volumes:
             - ./api:/code
             - node_modules:/code/node_modules
         command: npm start
+        env_file: ./api/.env
         # depends_on:
         #     - db
         tty: true

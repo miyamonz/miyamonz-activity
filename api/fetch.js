@@ -1,9 +1,9 @@
 const axios = require("axios");
 
-async function fetch(date) {
+async function fetch(url) {
   const config = {
     baseURL: "https://api.fitbit.com",
-    url: `/1.2/user/-/sleep/date/${date}.json`,
+    url,
     method: "get",
     headers: {
       //TOKENの有効期限注意
@@ -15,5 +15,4 @@ async function fetch(date) {
   return res.data;
 }
 
-// const data = fetch("2018-12-20");
 module.exports = fetch;

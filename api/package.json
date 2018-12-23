@@ -4,7 +4,7 @@
   "description": "miyamonz-activity api. proxy fitbit",
   "scripts": {
     "start": "if-env NODE_ENV=production && npm run start:prod || npm run start:dev",
-    "start:dev": "node index.js",
+    "start:dev": "node-dev --poll index.js",
     "start:pord": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +15,8 @@
     "axios": "^0.18.0",
     "if-env": "^1.0.4",
     "koa": "^2.6.2"
+  },
+  "devDependencies": {
+    "node-dev": "^3.1.3"
   }
 }
