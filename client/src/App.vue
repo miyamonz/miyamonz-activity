@@ -1,26 +1,16 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <div>
-      <table>
-        <tr>
-          <td>date</td>
-          <td>時間</td>
-          <td>start</td>
-          <td>end</td>
-        </tr>
-        <SleepTableRow v-for="s in sleep" :key="s.dateOfSleep" :json="s" />
-      </table>
-    </div>
+    睡眠時間
+    <div><SleepTable :array="sleep" /></div>
   </div>
 </template>
 <script>
-import SleepTableRow from "./components/SleepTableRow.vue";
+import SleepTable from "./components/SleepTable.vue";
 import fitbit from "./store.js";
 import { sleepMap } from "./util.js";
 export default {
   name: "app",
-  components: { SleepTableRow },
+  components: { SleepTable },
   async mounted() {
     const sleep = await fitbit.fetch();
     console.log(sleep[0]);
@@ -40,5 +30,10 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+#app div * {
+  width: 90vw;
+  text-align: center;
+  margin: 0 auto;
 }
 </style>
