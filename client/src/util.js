@@ -1,4 +1,4 @@
-import { DateTime, Duration, Interval } from "luxon";
+import { DateTime, Duration } from "luxon";
 
 export const sleepMap = json => {
   return {

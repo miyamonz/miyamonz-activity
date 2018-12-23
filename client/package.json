@@ -6,7 +6,7 @@
     "start": "if-env NODE_ENV=production && npm run start:prod || npm run start:dev",
     "start:dev": "npm run serve",
     "start:pord": "npm run serve",
-    "now-build": "vue-clie-service build",
+    "now-build": "npm run build",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
