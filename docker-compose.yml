@@ -17,7 +17,7 @@ services:
         build: 
             context: ./client
         ports:
-            - "8080:8080"
+            - "${LOCAL_DEV_PORT}:8080"
         volumes:
             - ./client:/home
             - client_node_modules:/home/node_modules
