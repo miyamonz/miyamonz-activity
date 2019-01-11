@@ -12,6 +12,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "buefy": "^0.7.1",
     "if-env": "^1.0.4",
     "luxon": "^1.8.3",
     "vue": "^2.5.17"
