@@ -31,7 +31,7 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
-#app div * {
+#app div > * {
   width: 90vw;
   text-align: center;
   margin: 0 auto;

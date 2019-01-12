@@ -1,19 +1,46 @@
 <template>
-  <table class="sleep-table">
-    <tr>
-      <td>date</td>
-      <td>時間</td>
-      <td>start</td>
-      <td>end</td>
-    </tr>
-    <SleepTableRow v-for="s in array" :key="s.dateOfSleep" :json="s" />
-  </table>
+  <b-table :columns="columns" :data="bueData"></b-table>
 </template>
 <script>
-import SleepTableRow from "./SleepTableRow.vue";
+const columns = [
+  {
+    field: "date",
+    label: "日付",
+    width: "150"
+  },
+  {
+    field: "duration",
+    label: "時間",
+    width: "150"
+  },
+  {
+    field: "start",
+    label: "start"
+  },
+  {
+    field: "end",
+    label: "end"
+  }
+];
 export default {
   props: ["array"],
-  components: { SleepTableRow }
+  computed: {
+    bueData() {
+      return this.array.map(row => {
+        return {
+          date: row.date.toFormat("yyyy-MM-dd"),
+          duration: row.duration.toFormat("h時間mm分"),
+          start: row.startTime.toFormat("hh:mm"),
+          end: row.endTime.toFormat("hh:mm")
+        };
+      });
+    }
+  },
+  data() {
+    return {
+      columns
+    };
+  }
 };
 </script>
 <style>
