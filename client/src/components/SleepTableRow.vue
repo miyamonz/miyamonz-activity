@@ -24,10 +24,10 @@ export default {
       return this.json.duration.toFormat("h時間mm分");
     },
     startStr() {
-      return this.json.startTime.toFormat("hh:mm");
+      return this.json.startTime.toFormat("HH:mm");
     },
     endStr() {
-      return this.json.endTime.toFormat("hh:mm");
+      return this.json.endTime.toFormat("HH:mm");
     }
   }
 };

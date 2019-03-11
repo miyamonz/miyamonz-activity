@@ -30,8 +30,8 @@ export default {
         return {
           date: row.date.toFormat("yyyy-MM-dd"),
           duration: row.duration.toFormat("h時間mm分"),
-          start: row.startTime.toFormat("hh:mm"),
-          end: row.endTime.toFormat("hh:mm")
+          start: row.startTime.toFormat("HH:mm"),
+          end: row.endTime.toFormat("HH:mm")
         };
       });
     }
