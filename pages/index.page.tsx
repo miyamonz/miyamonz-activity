@@ -33,7 +33,7 @@ const Home: NextPage = () => {
 const DateItem = ({ date, sleeps }: { date: string; sleeps: unknown[] }) => {
   return (
     <div className="flex h-8">
-      <span className="w-1/12 min-w-max px-2 text-center">{date}</span>
+      <span className="w-1/12 min-w-[8rem] text-center">{date}</span>
       <div className="flex-auto relative border-slate border-x border-y">
         {sleeps.map((sleep) => (
           <SleepItem key={sleep.startTime} sleep={sleep} />
