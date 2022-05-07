@@ -23,3 +23,61 @@ export function getSleepList() {
   const path = `/1.2/user/-/sleep/list.json?${param}`;
   return fetchFitbit(path);
 }
+export type SleepListResponseData = {
+  pagination: {
+    afterDate: string;
+    limit: number;
+    next: string;
+    offset: number;
+    previous: string;
+    sort: "desc" | "asc";
+  };
+  sleep: {
+    dateOfSleep: string;
+    duration: number;
+    efficiency: number;
+    endTime: string; // ISO date
+    infoCode: number;
+    isMainSleep: boolean;
+    levels: {
+      data: [
+        {
+          dateTime: string; // ISO date
+          level: "light" | "rem" | "deep" | "wake";
+          seconds: number;
+        }[]
+      ];
+      summary: {
+        deep: {
+          count: number;
+          minutes: number;
+          thirtyDayAvgMinutes: number;
+        };
+        light: {
+          count: number;
+          minutes: number;
+          thirtyDayAvgMinutes: number;
+        };
+        rem: {
+          count: number;
+          minutes: number;
+          thirtyDayAvgMinutes: number;
+        };
+        wake: {
+          count: number;
+          minutes: number;
+          thirtyDayAvgMinutes: number;
+        };
+      };
+    };
+    logId: number;
+    logType: "auto_detected" | "manual";
+    minutesAfterWakeup: number;
+    minutesAsleep: number;
+    minutesAwake: number;
+    minutesToFallAsleep: number;
+    startTime: string;
+    timeInBed: number;
+    type: "stages" | "classic";
+  }[];
+};

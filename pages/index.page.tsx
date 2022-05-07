@@ -6,8 +6,10 @@ const fetcher = (...args: Parameters<typeof fetch>) =>
   fetch(...args).then((res) => res.json());
 import { differenceInMinutes, format, parse, parseISO } from "date-fns";
 import { groupBy } from "./groupBy";
+import { SleepListResponseData } from "./api/fitbit";
+
 const Home: NextPage = () => {
-  const { data } = useSWR("/api/sleep/list", fetcher);
+  const { data } = useSWR<SleepListResponseData>("/api/sleep/list", fetcher);
   console.log(data);
   const grouped = groupBy(data?.sleep ?? [], (item) => item.dateOfSleep);
   return (
@@ -30,7 +32,13 @@ const Home: NextPage = () => {
   );
 };
 
-const DateItem = ({ date, sleeps }: { date: string; sleeps: unknown[] }) => {
+const DateItem = ({
+  date,
+  sleeps,
+}: {
+  date: string;
+  sleeps: SleepListResponseData["sleep"];
+}) => {
   return (
     <div className="flex h-8">
       <span className="w-1/12 min-w-[8rem] text-center">{date}</span>
@@ -42,7 +50,9 @@ const DateItem = ({ date, sleeps }: { date: string; sleeps: unknown[] }) => {
     </div>
   );
 };
-const SleepItem = ({ sleep }) => {
+const SleepItem: React.FC<{ sleep: SleepListResponseData["sleep"][0] }> = ({
+  sleep,
+}) => {
   console.log(sleep);
   const date = parse(sleep.dateOfSleep, "yyyy-MM-dd", new Date());
   const startTime = parseISO(sleep.startTime);
