@@ -14,3 +14,6 @@ export default async function handler(
   const json = await fitbitRes.json();
   res.status(200).json(json);
 }
+export async function fetchGetSleepList(): Promise<JSON> {
+  return fetch(`/api/fitbit/list`).then((res) => res.json());
+}
