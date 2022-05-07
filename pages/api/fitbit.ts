@@ -18,7 +18,7 @@ export function getSleepList() {
     afterDate: "2022-04-01",
     offset: "0",
     limit: "100",
-    sort: "asc",
+    sort: "desc",
   });
   const path = `/1.2/user/-/sleep/list.json?${param}`;
   return fetchFitbit(path);
