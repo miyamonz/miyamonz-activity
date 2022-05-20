@@ -7,11 +7,23 @@ const fetcher = (...args: Parameters<typeof fetch>) =>
 import { differenceInMinutes, format, parse, parseISO } from "date-fns";
 import { groupBy } from "./groupBy";
 import { SleepListResponseData } from "./api/fitbit";
+import { useSession, signIn } from "next-auth/react";
 
 const Home: NextPage = () => {
   const { data } = useSWR<SleepListResponseData>("/api/sleep/list", fetcher);
   console.log(data);
+  const { data: session } = useSession();
+  console.log(session);
   const grouped = groupBy(data?.sleep ?? [], (item) => item.dateOfSleep);
+
+  if (!session) {
+    return (
+      <>
+        not sined in
+        <button onClick={() => signIn()}>sign in</button>
+      </>
+    );
+  }
   return (
     <div className="px-8 py-0">
       <Head>
