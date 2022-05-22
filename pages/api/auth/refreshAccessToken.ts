@@ -1,12 +1,14 @@
-export async function refreshAccessToken(token) {
+import { JWT } from "next-auth/jwt";
+
+export async function refreshAccessToken(token: JWT) {
   try {
     const url =
       "https://api.fitbit.com/oauth2/token?" +
       new URLSearchParams({
-        client_id: process.env.FITBIT_CLIENT_ID,
-        client_secret: process.env.FITBIT_CLIENT_SECRET,
+        client_id: process.env.FITBIT_CLIENT_ID as string,
+        client_secret: process.env.FITBIT_CLIENT_SECRET as string,
         grant_type: "refresh_token",
-        refresh_token: token.refreshToken,
+        refresh_token: token.refreshToken as string,
       });
 
     const response = await fetch(url, {
