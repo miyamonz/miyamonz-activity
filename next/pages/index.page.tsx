@@ -22,7 +22,7 @@ const Home: NextPage = () => {
   }, []);
   const grouped = groupBy(data?.sleep ?? [], (item) => item.dateOfSleep);
 
-  if (!session) {
+  if (!session || session.error) {
     return (
       <>
         not sined in
