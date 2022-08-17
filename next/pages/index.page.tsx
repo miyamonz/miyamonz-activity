@@ -16,9 +16,8 @@ const Home: NextPage = () => {
   const { data: session } = useSession();
   console.log(session);
   useEffect(() => {
-    if (session && session?.success) {
-      // signIn();
-      signOut();
+    if (session?.error === "RefreshAccessTokenError") {
+      signIn(); // Force sign in to hopefully resolve error
     }
   }, []);
   const grouped = groupBy(data?.sleep ?? [], (item) => item.dateOfSleep);
