@@ -39,7 +39,7 @@ app.get("/", async (c) => {
     <div>
       <h1>miyamonz activity</h1>
       <a href="/auth">Connect with Fitbit</a>
-      <SleepData sleep={json.sleep} />
+      <SleepData sleep={json?.sleep} />
       <pre>{JSON.stringify(json, null, 2)}</pre>
     </div>
   );
@@ -90,17 +90,17 @@ app
         c.env.SECRET_KEY_FOR_SIGNED_COOKIE
       );
 
-      return c.redirect("/");
+      // return c.redirect("/");
 
       // TODO: Store the access token securely
       // For now, just display success
-      // return c.render(
-      //   <div>
-      //     <h1>Successfully connected!</h1>
-      //     <pre>{JSON.stringify(data, null, 2)}</pre>
-      //     <a href="/">Back to home</a>
-      //   </div>
-      // );
+      return c.render(
+        <div>
+          <h1>Successfully connected!</h1>
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+          <a href="/">Back to home</a>
+        </div>
+      );
     } catch (error) {
       return c.text(`Error exchanging code for token: ${error}`, 500);
     }

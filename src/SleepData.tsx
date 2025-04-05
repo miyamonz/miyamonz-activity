@@ -3,23 +3,8 @@ import {
   parseISO,
   addDays,
   subDays,
-  differenceInHours,
   differenceInMinutes,
 } from "date-fns";
-
-// Types
-type SleepLevel = {
-  dateTime: string;
-  level: string;
-  seconds: number;
-};
-
-type SleepSummary = {
-  light: { minutes: number; thirtyDayAvgMinutes: number };
-  deep: { minutes: number; thirtyDayAvgMinutes: number };
-  rem: { minutes: number; thirtyDayAvgMinutes: number };
-  wake: { minutes: number; thirtyDayAvgMinutes: number };
-};
 
 type SleepData = {
   dateOfSleep: string;
@@ -35,19 +20,17 @@ type SleepData = {
   isMainSleep: boolean;
 };
 
-type SleepDataProps = {
-  sleep: SleepData[];
+type SleepLevel = {
+  dateTime: string;
+  level: string;
+  seconds: number;
 };
-
-// Constants
-const STAGE_COLORS = {
-  wake: "#FF9B9B",
-  light: "#94CAFF",
-  deep: "#0066CC",
-  rem: "#9B6EFF",
-  asleep: "#94CAFF",
-  restless: "#FFB74D",
-} as const;
+type SleepSummary = {
+  light: { minutes: number; thirtyDayAvgMinutes: number };
+  deep: { minutes: number; thirtyDayAvgMinutes: number };
+  rem: { minutes: number; thirtyDayAvgMinutes: number };
+  wake: { minutes: number; thirtyDayAvgMinutes: number };
+};
 
 const DISPLAY_START_HOUR = -2; // 前日22時から
 const DISPLAY_END_HOUR = 22; // 当日22時まで
@@ -58,8 +41,7 @@ const DISPLAY_HOURS = Array.from(
 
 const STAGE_ORDER = ["deep", "rem", "light", "wake"] as const;
 
-// Main component
-export function SleepData({ sleep }: SleepDataProps) {
+export function SleepData({ sleep }: { sleep: SleepData[] }) {
   if (!sleep) return null;
 
   const lastWakeup = getLastWakeupTime(sleep);
@@ -91,6 +73,19 @@ export function SleepData({ sleep }: SleepDataProps) {
 
     return acc;
   }, {} as Record<string, SleepData[]>);
+
+  // 現在時刻が表示される日付を取得
+  const now = new Date();
+  const hour = now.getHours();
+  const currentTimeDate =
+    hour >= 22
+      ? format(addDays(now, 1), "yyyy-MM-dd") // 22時以降は翌日
+      : format(now, "yyyy-MM-dd"); // それ以外は当日
+
+  // 現在時刻の日付が含まれていない場合は追加
+  if (!sleepByDate[currentTimeDate]) {
+    sleepByDate[currentTimeDate] = [];
+  }
 
   const sortedDates = Object.keys(sleepByDate).sort();
 
@@ -213,6 +208,14 @@ function TimeScaleHeader() {
   );
 }
 
+const STAGE_COLORS = {
+  wake: "#FF9B9B",
+  light: "#94CAFF",
+  deep: "#0066CC",
+  rem: "#9B6EFF",
+  asleep: "#94CAFF",
+  restless: "#FFB74D",
+} as const;
 function StageLegend() {
   return (
     <div className="mt-4 flex gap-4 px-4">
@@ -229,7 +232,6 @@ function StageLegend() {
 function StageBar({
   stage,
   minutes,
-  totalMinutes,
 }: {
   stage: string;
   minutes: number;
