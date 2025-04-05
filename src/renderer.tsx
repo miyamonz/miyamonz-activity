@@ -5,6 +5,7 @@ export const renderer = jsxRenderer(({ children }) => {
     <html>
       <head>
         <link href="/static/style.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
       </head>
       <body>{children}</body>
     </html>
