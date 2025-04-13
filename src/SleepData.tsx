@@ -1,5 +1,7 @@
+import { Fragment } from "react";
+
 type SleepData = {
-  dateOfSleep: string;
+  // dateOfSleep: string; //使わない
   startTime: string;
   endTime: string;
   efficiency: number;
@@ -10,6 +12,16 @@ type SleepData = {
   minutesAsleep: number;
   timeInBed: number;
   isMainSleep: boolean;
+};
+
+type NormalizedSleepData = {
+  normalizedDate: string;
+  sleeps: Array<{
+    startTime: string;
+    endTime: string;
+    across: "no" | "yesterday" | "tomorrow";
+    minutesAsleep: number;
+  }>;
 };
 
 type SleepLevel = {
@@ -26,138 +38,211 @@ type SleepSummary = {
   restless?: { minutes: number; thirtyDayAvgMinutes?: number };
 };
 
-const STAGE_COLORS = {
-  deep: "bg-blue-700",
-  light: "bg-blue-400",
-  rem: "bg-purple-500",
-  wake: "bg-gray-400",
-} as const;
+type TimelineConfig = {
+  startHour: number;
+};
 
-function formatTime(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${hours}h ${mins}m`;
+function normalizeSleepData(
+  sleepList: SleepData[],
+  timelineConfig: TimelineConfig
+): NormalizedSleepData[] {
+  const sleepsByDate = new Map<
+    string,
+    Array<SleepData & { across: "no" | "yesterday" | "tomorrow" }>
+  >();
+
+  const addSleepToDate = (
+    date: Date,
+    sleep: SleepData,
+    across: "no" | "yesterday" | "tomorrow"
+  ) => {
+    const normalizedDate = date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const existingSleeps = sleepsByDate.get(normalizedDate) || [];
+    sleepsByDate.set(normalizedDate, [...existingSleeps, { ...sleep, across }]);
+  };
+
+  for (const sleep of sleepList) {
+    const startTime = new Date(sleep.startTime);
+    const endTime = new Date(sleep.endTime);
+
+    const splitDate = new Date(startTime);
+    splitDate.setHours(timelineConfig.startHour, 0, 0, 0);
+
+    const nextDate = new Date(splitDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    if (startTime < splitDate && splitDate <= endTime) {
+      addSleepToDate(splitDate, sleep, "tomorrow");
+      addSleepToDate(nextDate, sleep, "yesterday");
+    } else if (splitDate < startTime) {
+      addSleepToDate(nextDate, sleep, "no");
+    } else if (endTime < splitDate) {
+      addSleepToDate(splitDate, sleep, "no");
+    } else {
+      console.error("sleep data is not in the timeline", {
+        startTime,
+        endTime,
+        splitDate,
+      });
+    }
+  }
+
+  return Array.from(sleepsByDate.entries())
+    .map(([normalizedDate, sleeps]) => ({
+      normalizedDate,
+      sleeps: sleeps
+        .sort((b, a) => a.startTime.localeCompare(b.startTime))
+        .map(({ startTime, endTime, across, minutesAsleep }) => ({
+          startTime,
+          endTime,
+          across,
+          minutesAsleep,
+        })),
+    }))
+    .sort((a, b) => b.normalizedDate.localeCompare(a.normalizedDate));
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("ja-JP", {
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-  });
-}
+export function SleepData({ sleep }: { sleep: SleepData[] }) {
+  const timelineConfig = { startHour: 20 };
+  const normalizedSleep = normalizeSleepData(sleep, timelineConfig);
 
-function parseTime(timeStr: string): Date {
-  return new Date(timeStr);
-}
-
-function formatTimeHM(date: Date): string {
-  return date.toLocaleTimeString("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
-function getTimePosition(date: Date): number {
-  const hours = date.getHours() + date.getMinutes() / 60;
-  // 時間を0-24の範囲で位置に変換（パーセント）
-  return (hours / 24) * 100;
-}
-
-function Tooltip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-      {children}
+    <div className="w-full ">
+      <div className="grid grid-cols-[auto_auto_1fr] gap-4">
+        <div className="p-2 font-bold">日付</div>
+        <div className="p-2 font-bold">睡眠時間</div>
+        <div className="p-2 font-bold">
+          タイムライン ({timelineConfig.startHour}:00-{timelineConfig.startHour}
+          :00)
+          <TimelineMarkers startHour={timelineConfig.startHour} />
+        </div>
+
+        {normalizedSleep.map((day) => (
+          <Fragment key={day.normalizedDate}>
+            <div className="p-2 whitespace-nowrap">
+              {formatDate(day.normalizedDate)}
+            </div>
+            <div className="p-2 whitespace-nowrap">
+              {formatDuration(
+                day.sleeps.reduce(
+                  (total, sleep) => total + sleep.minutesAsleep,
+                  0
+                )
+              )}
+            </div>
+            <div className="space-y-1">
+              <Timeline sleeps={day.sleeps} timelineConfig={timelineConfig} />
+            </div>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
 
-export function SleepData({ sleep }: { sleep: SleepData[] }) {
-  const maxMinutes = Math.max(...sleep.map((s) => s.timeInBed));
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("ja-JP", {
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  });
+}
+
+function formatDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}時間${mins}分`;
+}
+
+function formatTime(timeStr: string) {
+  return new Date(timeStr).toLocaleTimeString("ja-JP", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+function Timeline({
+  sleeps,
+  timelineConfig,
+}: {
+  sleeps: NormalizedSleepData["sleeps"];
+  timelineConfig: TimelineConfig;
+}) {
+  return (
+    <div className="relative w-full h-6 bg-gray-100 rounded">
+      {sleeps.map((sleep) => (
+        <TimelineSleep
+          key={sleep.startTime}
+          sleep={sleep}
+          timelineConfig={timelineConfig}
+        />
+      ))}
+    </div>
+  );
+}
+function TimelineSleep({
+  sleep,
+  timelineConfig,
+}: {
+  sleep: NormalizedSleepData["sleeps"][0];
+  timelineConfig: TimelineConfig;
+}) {
+  const startTime = new Date(sleep.startTime);
+  if (sleep.across === "yesterday") {
+    startTime.setHours(timelineConfig.startHour, 0, 0, 0);
+  }
+  const endTime = new Date(sleep.endTime);
+  if (sleep.across === "tomorrow") {
+    endTime.setHours(timelineConfig.startHour, 0, 0, 0);
+  }
+  const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60); // minutes
+  const startHour = startTime.getHours() + startTime.getMinutes() / 60;
+  const width = (duration / (24 * 60)) * 100; // percentage of 24 hours
+
+  const left = (((startHour - timelineConfig.startHour + 24) % 24) / 24) * 100; // percentage from left, adjusted for startHour
 
   return (
-    <div className="w-full p-4">
-      <div className="space-y-2">
-        {sleep.map((day) => {
-          const startTime = parseTime(day.startTime);
-          const endTime = parseTime(day.endTime);
-          const startPos = getTimePosition(startTime);
-          const endPos = getTimePosition(endTime);
-          const width =
-            endPos > startPos ? endPos - startPos : 100 - startPos + endPos;
+    <div
+      className={`absolute h-full rounded ${
+        sleep.across === "no" ? "bg-blue-400" : "bg-blue-300"
+      }`}
+      style={{
+        left: `${left}%`,
+        width: `${width}%`,
+      }}
+    >
+      {sleep.across !== "yesterday" ? (
+        <span className="absolute -top-0 left-0 text-xs whitespace-nowrap">
+          {formatTime(sleep.startTime)}
+        </span>
+      ) : null}
+      {sleep.across !== "tomorrow" ? (
+        <span className="absolute -top-0 left-full text-xs whitespace-nowrap">
+          {formatTime(sleep.endTime)}
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
-          return (
-            <div key={day.dateOfSleep} className="flex items-center gap-4">
-              <div className="w-24 text-sm">{formatDate(day.dateOfSleep)}</div>
+function TimelineMarkers({ startHour }: { startHour: number }) {
+  // startHourから24時間分のマーカーを1時間おきに表示
+  const hours = Array.from({ length: 24 }, (_, i) => (startHour + i) % 24);
 
-              {/* 睡眠ステージのバーグラフ */}
-              <div className="flex-1">
-                <div className="relative h-8 flex">
-                  {Object.entries(day.levels.summary).map(([stage, data]) => {
-                    if (
-                      !data ||
-                      !STAGE_COLORS[stage as keyof typeof STAGE_COLORS]
-                    )
-                      return null;
-                    const width = (data.minutes / maxMinutes) * 100;
-                    return (
-                      <div
-                        key={stage}
-                        className={`h-full ${
-                          STAGE_COLORS[stage as keyof typeof STAGE_COLORS]
-                        }`}
-                        style={{ width: `${width}%` }}
-                        title={`${stage}: ${formatTime(data.minutes)}`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 時間軸上の睡眠時間帯 */}
-              <div className="w-48 relative h-8">
-                {/* 時間軸の目盛り（6時間ごと） */}
-                <div className="absolute inset-0 flex">
-                  {[0, 6, 12, 18].map((hour) => (
-                    <div
-                      key={hour}
-                      className="flex-1 border-l border-gray-200 text-xs text-gray-400"
-                      style={{ marginTop: "-1.2rem" }}
-                    >
-                      {hour}
-                    </div>
-                  ))}
-                </div>
-                {/* 睡眠時間帯のバー */}
-                <div
-                  className="group relative h-full bg-blue-500 hover:bg-blue-600 transition-colors"
-                  style={{
-                    left: `${startPos}%`,
-                    width: `${width}%`,
-                  }}
-                >
-                  <Tooltip>
-                    {formatTimeHM(startTime)} - {formatTimeHM(endTime)}
-                  </Tooltip>
-                </div>
-              </div>
-
-              <div className="w-24 text-sm text-right">
-                {formatTime(day.minutesAsleep)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-4 flex gap-4 justify-end text-sm">
-        {Object.entries(STAGE_COLORS).map(([stage, color]) => (
-          <div key={stage} className="flex items-center gap-1">
-            <div className={`w-3 h-3 ${color}`} />
-            <span>{stage}</span>
-          </div>
-        ))}
-      </div>
+  return (
+    <div className="relative w-full h-4">
+      {hours.map((hour) => (
+        <div
+          key={hour}
+          className="absolute text-xs text-gray-500"
+          style={{ left: `${(((hour - startHour + 24) % 24) / 24) * 100}%` }}
+        >
+          {hour}
+        </div>
+      ))}
     </div>
   );
 }
