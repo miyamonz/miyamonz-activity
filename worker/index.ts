@@ -1,14 +1,14 @@
 import { Hono } from "hono";
+import { contextStorage } from "hono/context-storage";
 
-import { getSignedCookie, setSignedCookie } from "hono/cookie";
 import { fetchAuthFitbit } from "./fetchAuthFitbit";
 import { fetchSleepData } from "./fetchSleepData";
-// const FITBIT_CLIENT_ID = process.env.FITBIT_CLIENT_ID;
-// const FITBIT_CLIENT_SECRET = process.env.FITBIT_CLIENT_SECRET;
-// const FITBIT_REDIRECT_URL = process.env.FITBIT_REDIRECT_URL;
+import { setAccessToken, getAccessToken } from "./accessToken";
+
 const FITBIT_AUTHORIZATION_URI = "https://www.fitbit.com/oauth2/authorize";
 
 const app = new Hono<{ Bindings: Env }>();
+app.use(contextStorage());
 
 const route = app
   .get("/auth", async (c) => {
@@ -47,18 +47,12 @@ const route = app
       console.log("data", data);
 
       const accessToken = data.access_token;
-      setSignedCookie(
-        c,
-        "fitbit_access_token",
-        accessToken,
-        c.env.SECRET_KEY_FOR_SIGNED_COOKIE
-      );
+      await setAccessToken(accessToken);
 
       // return c.redirect("/");
 
-      // TODO: Store the access token securely
       // For now, just display success
-      return c.text(
+      return c.html(
         `
         <div>
           <h1>Successfully connected!</h1>
@@ -72,17 +66,22 @@ const route = app
     }
   })
   .get("/api/fitbit", async (c) => {
-    const accessToken = await getSignedCookie(
-      c,
-      c.env.SECRET_KEY_FOR_SIGNED_COOKIE,
-      "fitbit_access_token"
-    );
+    const accessToken = await getAccessToken();
+
     if (!accessToken) {
-      return c.text("Authorization code not found", 400);
+      return c.json({ message: "Authorization code not found" } as const, 400);
     }
-    const json = await fetchSleepData(accessToken);
-    console.log("json", json);
-    return c.json(json);
+    const result = await fetchSleepData(accessToken);
+    if (result.ok) {
+      return c.json(result.data, 200);
+    } else {
+      if (result.errorType === "expired_token") {
+        return c.json({ message: "expired token!!!!!!!!" } as const, 401);
+      } else {
+        console.error(result.data);
+        return c.json({ message: "Failed to fetch sleep data" } as const, 400);
+      }
+    }
   });
 
 export default route;

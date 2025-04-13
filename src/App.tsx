@@ -19,8 +19,20 @@ function App() {
 }
 
 const sleepAtom = atom(async () => {
-  const response = await client.api.fitbit.$get();
-  return response.json();
+  try {
+    const res = await client.api.fitbit.$get();
+    if (res.status === 200) {
+      const json = await res.json();
+      return json;
+    } else {
+      const json = await res.json();
+      console.error(json);
+      throw new Error("Failed to fetch sleep data");
+    }
+  } catch (error) {
+    console.error(error);
+    return { sleep: [], pagination: { next: null } };
+  }
 });
 function SleepData_() {
   const json = useAtomValue(sleepAtom);
