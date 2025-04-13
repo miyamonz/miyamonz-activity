@@ -50,6 +50,14 @@ function normalizeSleepData(
     string,
     Array<SleepData & { across: "no" | "yesterday" | "tomorrow" }>
   >();
+  const today = new Date();
+  today.setDate(today.getDate() + 1);
+  const todayDate = today.toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  sleepsByDate.set(todayDate, []);
 
   const addSleepToDate = (
     date: Date,
@@ -111,7 +119,7 @@ export function SleepData({ sleep }: { sleep: SleepData[] }) {
 
   return (
     <div className="w-full ">
-      <div className="grid grid-cols-[auto_auto_1fr] gap-4">
+      <div className="grid grid-cols-[auto_auto_1fr] gap-0">
         <div className="p-2 font-bold">日付</div>
         <div className="p-2 font-bold">睡眠時間</div>
         <div className="font-bold">
@@ -120,24 +128,37 @@ export function SleepData({ sleep }: { sleep: SleepData[] }) {
           <TimelineMarkers startHour={timelineConfig.startHour} />
         </div>
 
-        {normalizedSleep.map((day) => (
-          <Fragment key={day.normalizedDate}>
-            <div className="p-2 whitespace-nowrap">
-              {formatDate(day.normalizedDate)}
-            </div>
-            <div className="p-2 whitespace-nowrap">
-              {formatDuration(
-                day.sleeps.reduce(
-                  (total, sleep) => total + sleep.minutesAsleep,
-                  0
-                )
-              )}
-            </div>
-            <div className="space-y-1">
-              <Timeline sleeps={day.sleeps} timelineConfig={timelineConfig} />
-            </div>
-          </Fragment>
-        ))}
+        {normalizedSleep.map((day) => {
+          const isSaturday = new Date(day.normalizedDate).getDay() === 6;
+          const isSunday = new Date(day.normalizedDate).getDay() === 0;
+          const bgColor = isSaturday
+            ? "bg-blue-100"
+            : isSunday
+            ? "bg-red-100"
+            : "";
+          return (
+            <Fragment key={day.normalizedDate}>
+              <div className={`p-2 whitespace-nowrap ${bgColor}`}>
+                {formatDate(day.normalizedDate)}
+              </div>
+              <div className={`p-2 whitespace-nowrap ${bgColor}`}>
+                {formatDuration(
+                  day.sleeps.reduce(
+                    (total, sleep) => total + sleep.minutesAsleep,
+                    0
+                  )
+                )}
+              </div>
+              <div className={`space-y-1 py-2`}>
+                <Timeline
+                  day={day.normalizedDate}
+                  sleeps={day.sleeps}
+                  timelineConfig={timelineConfig}
+                />
+              </div>
+            </Fragment>
+          );
+        })}
       </div>
     </div>
   );
@@ -165,22 +186,52 @@ function formatTime(timeStr: string) {
   });
 }
 function Timeline({
+  day,
   sleeps,
   timelineConfig,
 }: {
+  day: string;
   sleeps: NormalizedSleepData["sleeps"];
   timelineConfig: TimelineConfig;
 }) {
   // 0時の位置を計算（startHourからの相対位置）
   const midnightPosition = ((24 - timelineConfig.startHour) / 24) * 100;
 
+  // 現在時刻の位置を計算（今日の行の場合のみ）
+  const currentTimePosition = (() => {
+    const now = new Date();
+    const today = new Date();
+    if (today.getHours() > timelineConfig.startHour) {
+      today.setDate(today.getDate() + 1);
+    }
+
+    const isToday =
+      today.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }) === day;
+
+    if (!isToday) return null;
+
+    const currentHour = now.getHours() + now.getMinutes() / 60;
+    return (((currentHour - timelineConfig.startHour + 24) % 24) / 24) * 100;
+  })();
+
   return (
-    <div className="relative w-full h-6 bg-gray-100 rounded">
+    <div className="relative w-full h-full bg-gray-100 rounded">
       {/* 0時の縦線 */}
       <div
         className="absolute h-full w-px bg-gray-300"
         style={{ left: `${midnightPosition}%` }}
       />
+      {/* 現在時刻の縦線（今日の行のみ） */}
+      {currentTimePosition !== null && (
+        <div
+          className="absolute h-full w-px bg-red-500"
+          style={{ left: `${currentTimePosition}%` }}
+        />
+      )}
       {sleeps.map((sleep) => (
         <TimelineSleep
           key={sleep.startTime}
