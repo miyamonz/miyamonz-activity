@@ -1,5 +1,5 @@
 import { parse } from "valibot";
-import { example } from "./cache";
+// import { example } from "./cache";
 import { toSleepQueryParams } from "./schema";
 import { SleepResponse, SleepResponseSchema } from "./sleepSchema";
 

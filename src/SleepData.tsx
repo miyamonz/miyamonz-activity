@@ -175,7 +175,7 @@ function formatDate(dateStr: string) {
 function formatDuration(minutes: number) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return `${hours}時間${mins}分`;
+  return `${hours}h${mins}m`;
 }
 
 function formatTime(timeStr: string) {

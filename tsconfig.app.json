@@ -25,6 +25,8 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src", "worker/sleepSchema.ts",
+    "src",
+    "worker/sleepSchema.ts",
+    "./worker-configuration.d.ts",
   ]
 }

@@ -18,6 +18,8 @@ export async function fetchAuthFitbit(
   redirectUri: string,
   keys: { FITBIT_CLIENT_ID: string; FITBIT_CLIENT_SECRET: string }
 ) {
+  console.log("fetchAuthFitbit");
+  console.log(redirectUri);
   const params = new URLSearchParams({
     client_id: keys.FITBIT_CLIENT_ID,
     grant_type: "authorization_code",
@@ -35,7 +37,19 @@ export async function fetchAuthFitbit(
     body: params.toString(),
   });
 
-  const body = await response.json();
-  const parsed = parse(oauthResponseSchema, body);
-  return parsed;
+  if (response.ok) {
+    const body = await response.json();
+    console.log("body", body);
+    try {
+      const parsed = parse(oauthResponseSchema, body);
+      return parsed;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  } else {
+    const body = await response.json();
+    console.log("body", body);
+    throw new Error("Failed to fetch auth fitbit");
+  }
 }

@@ -13,7 +13,9 @@ app.use(contextStorage());
 const route = app
   .get("/auth", async (c) => {
     const { FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET } = c.env;
-    const FITBIT_REDIRECT_URL = "http://localhost:5173/callback";
+    const url = new URL(c.req.url);
+    url.pathname = "/callback";
+    const FITBIT_REDIRECT_URL = url.toString();
     console.log(
       "auth",
       FITBIT_CLIENT_ID,
@@ -39,11 +41,13 @@ const route = app
 
     try {
       const { FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET } = c.env;
-      const data = await fetchAuthFitbit(
-        code,
-        `http://localhost:5173/callback`,
-        { FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET }
-      );
+      const url = new URL(c.req.url);
+      url.pathname = "/callback";
+      url.search = "";
+      const data = await fetchAuthFitbit(code, url.toString(), {
+        FITBIT_CLIENT_ID,
+        FITBIT_CLIENT_SECRET,
+      });
       console.log("data", data);
 
       const accessToken = data.access_token;
