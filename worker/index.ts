@@ -8,14 +8,7 @@ import { fetchSleepData } from "./fetchSleepData";
 // const FITBIT_REDIRECT_URL = process.env.FITBIT_REDIRECT_URL;
 const FITBIT_AUTHORIZATION_URI = "https://www.fitbit.com/oauth2/authorize";
 
-type Bindings = {
-  FITBIT_CLIENT_ID: string;
-  FITBIT_CLIENT_SECRET: string;
-  FITBIT_REDIRECT_URL: string;
-  SECRET_KEY_FOR_SIGNED_COOKIE: string;
-};
-
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Env }>();
 
 const route = app
   .get("/auth", async (c) => {
@@ -89,7 +82,7 @@ const route = app
     }
     const json = await fetchSleepData(accessToken);
     console.log("json", json);
-    return c.json(json);
+    return c.json(json as Record<string, unknown>);
   });
 
 export default route;

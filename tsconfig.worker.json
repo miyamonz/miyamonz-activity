@@ -9,6 +9,7 @@
     ],
   },
   "include": [
-    "worker"
+    "worker",
+    "./worker-configuration.d.ts",
   ],
 }

@@ -26,10 +26,5 @@
   },
   "include": [
     "src",
-    "worker/index.ts",
-    "worker/renderer.tsx",
-    "worker/fetchAuthFitbit.tsx",
-    "worker/schema.ts",
-    "worker/fetchSleepData.ts"
   ]
 }
