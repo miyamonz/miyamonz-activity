@@ -5,9 +5,9 @@
   "compatibility_flags": [
     "nodejs_compat_v2"
   ],
-  "main": "./src/index.tsx",
+  "main": "./worker/index.ts",
   "assets": {
-    "directory": "./public"
+    "not_found_handling": "single-page-application"
   },
   "routes": [
     {

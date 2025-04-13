@@ -50,13 +50,11 @@ export function SleepData({ sleep }: { sleep: SleepData[] }) {
     const endDate = parseISO(night.endTime);
     const dateOfSleep = night.dateOfSleep;
 
-    // 終了日に追加
     if (!acc[dateOfSleep]) {
       acc[dateOfSleep] = [];
     }
     acc[dateOfSleep].push(night);
 
-    // 日付をまたぐ場合は開始日にも追加
     if (endDate < startDate) {
       const previousDate = format(
         subDays(parseISO(dateOfSleep), 1),
@@ -74,35 +72,273 @@ export function SleepData({ sleep }: { sleep: SleepData[] }) {
     return acc;
   }, {} as Record<string, SleepData[]>);
 
-  // 現在時刻が表示される日付を取得
   const now = new Date();
   const hour = now.getHours();
   const currentTimeDate =
     hour >= 22
-      ? format(addDays(now, 1), "yyyy-MM-dd") // 22時以降は翌日
-      : format(now, "yyyy-MM-dd"); // それ以外は当日
+      ? format(addDays(now, 1), "yyyy-MM-dd")
+      : format(now, "yyyy-MM-dd");
 
-  // 現在時刻の日付が含まれていない場合は追加
   if (!sleepByDate[currentTimeDate]) {
     sleepByDate[currentTimeDate] = [];
   }
 
   const sortedDates = Object.keys(sleepByDate).sort();
 
+  const areas = Array.from(
+    { length: DISPLAY_END_HOUR - DISPLAY_START_HOUR + 1 },
+    (_, i) => {
+      return ["date", "stages", "timeline"];
+    }
+  );
+
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="min-w-[1200px]">
-        <TimeScaleHeader />
-        {sortedDates.map((date) => (
-          <SleepRow
+    <div className="w-full overflow-x-auto p-2">
+      <div
+        className="grid"
+        style={{
+          gridTemplateAreas: areas
+            .map((row) => row.join(" "))
+            .map((row) => `"${row}"`)
+            .join("\n"),
+          gridTemplateColumns: "6rem 10rem repeat(auto-fit, minmax(1px, 1fr))",
+          gridTemplateRows: "2rem repeat(auto-fit, minmax(10px, 1fr))",
+        }}
+      >
+        <div
+          className="grid grid-cols-subgrid grid-rows-subgrid"
+          style={{ gridArea: "date" }}
+        >
+          <Dates sleepByDate={sleepByDate} sortedDates={sortedDates} />
+        </div>
+        <div
+          className="grid grid-cols-subgrid grid-rows-subgrid"
+          style={{ gridArea: "stages" }}
+        >
+          <Stages sleepByDate={sleepByDate} sortedDates={sortedDates} />
+        </div>
+
+        {/* Header */}
+        <div className="grid-cols-subgrid">
+          <div
+            className="grid border-b"
+            style={{
+              gridTemplateColumns: `repeat(${
+                DISPLAY_END_HOUR - DISPLAY_START_HOUR
+              }, 1fr)`,
+            }}
+          >
+            {DISPLAY_HOURS.map((hour) => {
+              const displayHour = hour < 0 ? hour + 24 : hour;
+              return (
+                <div
+                  key={hour}
+                  className="text-center text-sm text-gray-500 border-r last:border-r-0"
+                >
+                  {displayHour}:00
+                  {hour < 0 && (
+                    <span className="text-xs text-gray-400">
+                      (-{Math.abs(hour)})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Rows */}
+        {sortedDates.map((date) => {
+          const nightSleeps = sleepByDate[date];
+          const stageTotals = calculateStageTotals(nightSleeps);
+          const totalMinutes = Object.values(stageTotals).reduce(
+            (a, b) => a + b,
+            0
+          );
+          const displayDate = parseISO(date);
+
+          return (
+            <div
+              key={date}
+              className="grid h-12"
+              style={{
+                gridTemplateColumns: "10rem 6rem 1fr",
+              }}
+            >
+              {/* Date */}
+
+              {/* Stages */}
+
+              {/* Timeline */}
+              {false && (
+                <div
+                  className="grid border-b relative"
+                  style={{
+                    gridTemplateColumns: `repeat(${
+                      DISPLAY_END_HOUR - DISPLAY_START_HOUR
+                    }, 1fr)`,
+                  }}
+                >
+                  {/* Grid lines */}
+                  {DISPLAY_HOURS.map((hour) => (
+                    <div key={hour} className="border-r last:border-r-0" />
+                  ))}
+
+                  {/* Current time */}
+                  <CurrentTimeLine date={date} lastWakeup={lastWakeup} />
+
+                  {/* Sleep blocks */}
+                  <div className="absolute inset-0 flex items-center">
+                    {nightSleeps.map((night, nightIndex) => (
+                      <SleepBlock
+                        key={night.startTime}
+                        night={night}
+                        index={nightIndex}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <StageLegend />
+    </div>
+  );
+}
+
+function Dates({
+  sleepByDate,
+  sortedDates,
+}: {
+  sleepByDate: Record<string, SleepData[]>;
+  sortedDates: string[];
+}) {
+  return (
+    <>
+      <div className="w-full h-full p-2 border-b border-r text-sm text-gray-500">
+        Date
+      </div>
+      {sortedDates.map((date) => {
+        const nightSleeps = sleepByDate[date];
+        const stageTotals = calculateStageTotals(nightSleeps);
+        const totalMinutes = Object.values(stageTotals).reduce(
+          (a, b) => a + b,
+          0
+        );
+        const displayDate = parseISO(date);
+
+        return (
+          <div key={date} className=" h-12">
+            {/* Date */}
+            <div className="w-full h-full p-2 border-b border-r flex flex-col justify-center">
+              <div className="font-medium text-sm">
+                {format(displayDate, "M/d EEE")}
+                {nightSleeps.length > 1 && (
+                  <span className="ml-1 text-xs text-gray-500">
+                    ({nightSleeps.length})
+                  </span>
+                )}
+              </div>
+              <div className="font-mono text-xs text-gray-500">
+                {formatDuration(totalMinutes)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+function Stages({
+  sleepByDate,
+  sortedDates,
+}: {
+  sleepByDate: Record<string, SleepData[]>;
+  sortedDates: string[];
+}) {
+  return (
+    <>
+      <div className="w-full h-full p-2 border-b border-r text-sm text-gray-500">
+        Stages
+      </div>
+      {sortedDates.map((date) => {
+        const nightSleeps = sleepByDate[date];
+        const stageTotals = calculateStageTotals(nightSleeps);
+        const totalMinutes = Object.values(stageTotals).reduce(
+          (a, b) => a + b,
+          0
+        );
+
+        return (
+          <div
             key={date}
-            date={date}
-            nightSleeps={sleepByDate[date]}
-            lastWakeup={lastWakeup}
+            className="w-full h-full border-b border-r p-2 flex justify-center items-center"
+          >
+            <div className="w-full h-4 flex overflow-hidden rounded">
+              {Object.entries(stageTotals)
+                .sort(
+                  ([a], [b]) =>
+                    STAGE_ORDER.indexOf(a as any) -
+                    STAGE_ORDER.indexOf(b as any)
+                )
+                .map(([stage, minutes]) => (
+                  <StageBar key={stage} stage={stage} minutes={minutes} />
+                ))}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function SleepBlock({ night, index }: { night: SleepData; index: number }) {
+  const startDate = parseISO(night.startTime);
+  const endDate = parseISO(night.endTime);
+
+  let startHour = calculateHourFromDate(startDate);
+  let endHour = calculateHourFromDate(endDate);
+
+  if (startDate < endDate && startHour > endHour) {
+    startHour -= 24;
+  }
+  if (endDate < startDate) {
+    endHour += 24;
+  }
+
+  if (endHour < DISPLAY_START_HOUR || startHour > DISPLAY_END_HOUR) {
+    return null;
+  }
+
+  const duration = endHour - startHour;
+  const verticalOffset = index * 10;
+
+  const normalizedStartHour =
+    (startHour - DISPLAY_START_HOUR) / (DISPLAY_END_HOUR - DISPLAY_START_HOUR);
+  const normalizedDuration = duration / (DISPLAY_END_HOUR - DISPLAY_START_HOUR);
+
+  return (
+    <div
+      className="absolute h-8 rounded"
+      style={{
+        left: `${normalizedStartHour * 100}%`,
+        width: `${normalizedDuration * 100}%`,
+        top: `${verticalOffset}px`,
+        opacity: night.isMainSleep ? 1 : 0.8,
+      }}
+    >
+      <div className="flex h-full w-full">
+        {night.levels.data.map((level, index) => (
+          <SleepStageTimeline
+            key={index}
+            level={level}
+            startDate={startDate}
+            duration={duration}
           />
         ))}
       </div>
-      <StageLegend />
     </div>
   );
 }
@@ -229,14 +465,7 @@ function StageLegend() {
   );
 }
 
-function StageBar({
-  stage,
-  minutes,
-}: {
-  stage: string;
-  minutes: number;
-  totalMinutes: number;
-}) {
+function StageBar({ stage, minutes }: { stage: string; minutes: number }) {
   const width = Math.min((minutes / 720) * 100, 100);
   return (
     <div
@@ -246,7 +475,7 @@ function StageBar({
       }}
       className="group relative h-full"
     >
-      <div className="absolute bottom-full left-1/2 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-xs text-white group-hover:block z-10">
+      <div className="absolute bottom-full mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black/90 px-2 py-1 text-xs text-white group-hover:block z-10">
         <div className="capitalize">{stage}</div>
         <div>{minutes}min</div>
       </div>
@@ -334,123 +563,5 @@ function CurrentTimeLine({
         </div>
       </div>
     </>
-  );
-}
-
-function SleepRow({
-  date,
-  nightSleeps,
-  lastWakeup,
-}: {
-  date: string;
-  nightSleeps: SleepData[];
-  lastWakeup: Date | null;
-}) {
-  const stageTotals = calculateStageTotals(nightSleeps);
-  const totalMinutes = Object.values(stageTotals).reduce((a, b) => a + b, 0);
-
-  const displayDate = parseISO(date);
-
-  return (
-    <div className="flex border-b">
-      <div className="w-24 flex-shrink-0 p-2 text-sm border-r">
-        <div className="font-medium">
-          {format(displayDate, "M/d EEE")}
-          {nightSleeps.length > 1 && (
-            <span className="ml-1 text-xs text-gray-500">
-              ({nightSleeps.length})
-            </span>
-          )}
-        </div>
-        <div className="mt-0.5 font-mono text-xs">
-          {formatDuration(totalMinutes)}
-        </div>
-      </div>
-
-      <div className="w-32 flex-shrink-0 p-2 border-r">
-        <div className="flex h-8 w-full overflow-hidden rounded">
-          {Object.entries(stageTotals)
-            .sort(
-              ([a], [b]) =>
-                STAGE_ORDER.indexOf(a as any) - STAGE_ORDER.indexOf(b as any)
-            )
-            .map(([stage, minutes]) => (
-              <StageBar
-                key={stage}
-                stage={stage}
-                minutes={minutes}
-                totalMinutes={totalMinutes}
-              />
-            ))}
-        </div>
-      </div>
-
-      <div className="relative flex flex-1 h-16 py-2">
-        <div className="absolute inset-0 flex">
-          {DISPLAY_HOURS.map((hour) => (
-            <div
-              key={hour}
-              className="flex-1 border-r border-gray-100 last:border-r-0"
-            />
-          ))}
-        </div>
-        <CurrentTimeLine date={date} lastWakeup={lastWakeup} />
-        {nightSleeps.map((night, nightIndex) => {
-          const startDate = parseISO(night.startTime);
-          const endDate = parseISO(night.endTime);
-
-          let startHour = calculateHourFromDate(startDate);
-          let endHour = calculateHourFromDate(endDate);
-
-          // 前日からの睡眠の場合
-          if (startDate < endDate && startHour > endHour) {
-            startHour -= 24;
-          }
-          // 翌日までの睡眠の場合
-          if (endDate < startDate) {
-            endHour += 24;
-          }
-
-          // 表示範囲外のデータはスキップ
-          if (endHour < DISPLAY_START_HOUR || startHour > DISPLAY_END_HOUR) {
-            return null;
-          }
-
-          const duration = endHour - startHour;
-          const verticalOffset = nightIndex * 10;
-
-          // 時間を表示範囲に合わせて正規化
-          const normalizedStartHour =
-            (startHour - DISPLAY_START_HOUR) /
-            (DISPLAY_END_HOUR - DISPLAY_START_HOUR);
-          const normalizedDuration =
-            duration / (DISPLAY_END_HOUR - DISPLAY_START_HOUR);
-
-          return (
-            <div
-              key={night.startTime}
-              className="absolute h-8 rounded"
-              style={{
-                left: `${normalizedStartHour * 100}%`,
-                width: `${normalizedDuration * 100}%`,
-                top: `${verticalOffset}px`,
-                opacity: night.isMainSleep ? 1 : 0.8,
-              }}
-            >
-              <div className="flex h-full w-full">
-                {night.levels.data.map((level, index) => (
-                  <SleepStageTimeline
-                    key={index}
-                    level={level}
-                    startDate={startDate}
-                    duration={duration}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 }
