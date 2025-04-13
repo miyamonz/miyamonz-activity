@@ -114,7 +114,7 @@ export function SleepData({ sleep }: { sleep: SleepData[] }) {
       <div className="grid grid-cols-[auto_auto_1fr] gap-4">
         <div className="p-2 font-bold">日付</div>
         <div className="p-2 font-bold">睡眠時間</div>
-        <div className="p-2 font-bold">
+        <div className="font-bold">
           タイムライン ({timelineConfig.startHour}:00-{timelineConfig.startHour}
           :00)
           <TimelineMarkers startHour={timelineConfig.startHour} />
@@ -171,8 +171,16 @@ function Timeline({
   sleeps: NormalizedSleepData["sleeps"];
   timelineConfig: TimelineConfig;
 }) {
+  // 0時の位置を計算（startHourからの相対位置）
+  const midnightPosition = ((24 - timelineConfig.startHour) / 24) * 100;
+
   return (
     <div className="relative w-full h-6 bg-gray-100 rounded">
+      {/* 0時の縦線 */}
+      <div
+        className="absolute h-full w-px bg-gray-300"
+        style={{ left: `${midnightPosition}%` }}
+      />
       {sleeps.map((sleep) => (
         <TimelineSleep
           key={sleep.startTime}
@@ -230,14 +238,14 @@ function TimelineSleep({
 
 function TimelineMarkers({ startHour }: { startHour: number }) {
   // startHourから24時間分のマーカーを1時間おきに表示
-  const hours = Array.from({ length: 24 }, (_, i) => (startHour + i) % 24);
+  const hours = Array.from({ length: 25 }, (_, i) => (startHour + i) % 24);
 
   return (
     <div className="relative w-full h-4">
-      {hours.map((hour) => (
+      {hours.map((hour, i) => (
         <div
-          key={hour}
-          className="absolute text-xs text-gray-500"
+          key={i}
+          className="absolute text-xs text-gray-500 -translate-x-1/2"
           style={{ left: `${(((hour - startHour + 24) % 24) / 24) * 100}%` }}
         >
           {hour}
