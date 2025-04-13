@@ -4,6 +4,7 @@ import { contextStorage } from "hono/context-storage";
 import { fetchAuthFitbit } from "./fetchAuthFitbit";
 import { fetchSleepData } from "./fetchSleepData";
 import { setAccessToken, getAccessToken } from "./accessToken";
+import { cache } from "hono/cache";
 
 const FITBIT_AUTHORIZATION_URI = "https://www.fitbit.com/oauth2/authorize";
 
@@ -69,23 +70,36 @@ const route = app
       return c.text(`Error exchanging code for token: ${error}`, 500);
     }
   })
-  .get("/api/fitbit", async (c) => {
-    const accessToken = await getAccessToken();
+  .get(
+    "/api/fitbit",
+    cache({
+      cacheName: "api-fitbit",
+      cacheControl: "max-age=60",
+    }),
+    async (c) => {
+      const accessToken = await getAccessToken();
 
-    if (!accessToken) {
-      return c.json({ message: "Authorization code not found" } as const, 400);
-    }
-    const result = await fetchSleepData(accessToken);
-    if (result.ok) {
-      return c.json(result.data, 200);
-    } else {
-      if (result.errorType === "expired_token") {
-        return c.json({ message: "expired token!!!!!!!!" } as const, 401);
+      if (!accessToken) {
+        return c.json(
+          { message: "Authorization code not found" } as const,
+          400
+        );
+      }
+      const result = await fetchSleepData(accessToken);
+      if (result.ok) {
+        return c.json(result.data, 200);
       } else {
-        console.error(result.data);
-        return c.json({ message: "Failed to fetch sleep data" } as const, 400);
+        if (result.errorType === "expired_token") {
+          return c.json({ message: "expired token!!!!!!!!" } as const, 401);
+        } else {
+          console.error(result.data);
+          return c.json(
+            { message: "Failed to fetch sleep data" } as const,
+            400
+          );
+        }
       }
     }
-  });
+  );
 
 export default route;
