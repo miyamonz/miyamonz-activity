@@ -26,10 +26,12 @@ type SleepLevel = {
   seconds: number;
 };
 type SleepSummary = {
-  light: { minutes: number; thirtyDayAvgMinutes: number };
-  deep: { minutes: number; thirtyDayAvgMinutes: number };
-  rem: { minutes: number; thirtyDayAvgMinutes: number };
-  wake: { minutes: number; thirtyDayAvgMinutes: number };
+  light?: { minutes: number; thirtyDayAvgMinutes?: number };
+  deep?: { minutes: number; thirtyDayAvgMinutes?: number };
+  rem?: { minutes: number; thirtyDayAvgMinutes?: number };
+  wake?: { minutes: number; thirtyDayAvgMinutes?: number };
+  asleep?: { minutes: number; thirtyDayAvgMinutes?: number };
+  restless?: { minutes: number; thirtyDayAvgMinutes?: number };
 };
 
 const DISPLAY_START_HOUR = -2; // 前日22時から

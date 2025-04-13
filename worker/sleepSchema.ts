@@ -2,12 +2,14 @@ import * as v from "valibot";
 
 // Sleep Level Data Schema
 const SleepLevelDataSchema = v.object({
-  datetime: v.string(),
+  dateTime: v.string(),
   level: v.union([
     v.literal("wake"),
     v.literal("deep"),
     v.literal("light"),
     v.literal("rem"),
+    v.literal("asleep"),
+    v.literal("restless"),
   ]),
   seconds: v.number(),
 });
@@ -16,18 +18,20 @@ const SleepLevelDataSchema = v.object({
 const SleepLevelSummarySchema = v.object({
   count: v.number(),
   minutes: v.number(),
-  thirtyDayAvgMinutes: v.number(),
+  thirtyDayAvgMinutes: v.optional(v.number()),
 });
 
 // Sleep Levels Schema
 const SleepLevelsSchema = v.object({
   data: v.array(SleepLevelDataSchema),
-  shortData: v.array(SleepLevelDataSchema),
+  shortData: v.optional(v.array(SleepLevelDataSchema)),
   summary: v.object({
-    deep: SleepLevelSummarySchema,
-    light: SleepLevelSummarySchema,
-    rem: SleepLevelSummarySchema,
-    wake: SleepLevelSummarySchema,
+    deep: v.optional(SleepLevelSummarySchema),
+    light: v.optional(SleepLevelSummarySchema),
+    rem: v.optional(SleepLevelSummarySchema),
+    wake: v.optional(SleepLevelSummarySchema),
+    asleep: v.optional(SleepLevelSummarySchema),
+    restless: v.optional(SleepLevelSummarySchema),
   }),
 });
 
@@ -67,4 +71,4 @@ export const SleepResponseSchema = v.object({
   pagination: PaginationSchema,
 });
 
-export type SleepResponse = typeof SleepResponseSchema.type;
+export type SleepResponse = v.InferInput<typeof SleepResponseSchema>;

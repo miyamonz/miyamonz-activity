@@ -82,7 +82,7 @@ const route = app
     }
     const json = await fetchSleepData(accessToken);
     console.log("json", json);
-    return c.json(json as Record<string, unknown>);
+    return c.json(json);
   });
 
 export default route;

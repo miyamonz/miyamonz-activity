@@ -26,7 +26,7 @@ function SleepData_() {
   const json = useAtomValue(sleepAtom);
   return (
     <>
-      <SleepData sleep={json?.sleep} />
+      <SleepData sleep={json.sleep} />
       <pre>{JSON.stringify(json, null, 2)}</pre>
     </>
   );
